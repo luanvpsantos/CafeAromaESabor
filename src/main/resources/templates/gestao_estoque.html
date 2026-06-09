@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestão de Estoque - Café Aroma & Sabor</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-inner">
+        <div class="logo">Café Aroma & Sabor</div>
+        <div class="nav-links">
+            <a th:href="@{/}">Início</a>
+            <a th:href="@{/produto}">Produtos</a>
+            <a th:href="@{/estoque}">Estoque</a>
+            <a th:href="@{/usuario}">Usuários</a>
+        </div>
+        <div class="nav-user">
+            <span th:if="${#authorization.expression('isAuthenticated()')}" th:text="${#authentication.name}">Usuário</span>
+            <form th:if="${#authorization.expression('isAuthenticated()')}" th:action="@{/logout}" method="post" style="display:inline;margin-left:12px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn btn-link">Sair</button>
+            </form>
+            <a th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/login}" class="btn btn-primary">Entrar</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container estoque-container">
+    <header>
+        <h2>Gestão de Estoque</h2>
+        <div class="top-actions">
+            <a class="btn btn-secondary" th:href="@{/home}">Voltar</a>
+        </div>
+    </header>
+
+    <section class="form-section">
+        <form id="estoqueForm" onsubmit="return registrarMovimentacao()">
+            <label>Produto:</label>
+            <select id="produtoEstoque" required>
+                <!-- Produtos serão carregados dinamicamente -->
+            </select>
+
+            <label>Tipo:</label>
+            <select id="tipoMovimentacao">
+                <option value="entrada">Entrada</option>
+                <option value="saida">Saída</option>
+            </select>
+
+            <label>Quantidade:</label>
+            <input type="number" id="quantidade" min="1" required>
+
+            <label>Data:</label>
+            <input type="datetime-local" id="dataMovimentacao" required>
+
+            <button type="submit">Registrar Movimentação</button>
+        </form>
+    </section>
+
+    <section class="list-section">
+        <h3>Histórico de Movimentações</h3>
+        <table id="tabelaHistorico">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Tipo</th>
+                    <th>Quantidade</th>
+                    <th>Data/Hora</th>
+                    <th>Responsável</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Movimentações serão inseridas aqui -->
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<script>
+let produtos = JSON.parse(localStorage.getItem('produtos')) || []; // produtos cadastrados
+let movimentacoes = [];
+
+function atualizarProdutosSelect() {
+    const select = document.getElementById('produtoEstoque');
+    select.innerHTML = '';
+    produtos.forEach((p, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${p.nome} (Qtd: ${p.quantidade})`;
+        select.appendChild(option);
+    });
+}
+
+// Atualiza produtos ao carregar a página
+atualizarProdutosSelect();
+
+function registrarMovimentacao() {
+    const produtoIndex = parseInt(document.getElementById('produtoEstoque').value);
+    const tipo = document.getElementById('tipoMovimentacao').value;
+    const quantidade = parseInt(document.getElementById('quantidade').value);
+    const dataHora = document.getElementById('dataMovimentacao').value;
+    const usuario = localStorage.getItem('usuario') || 'Usuário';
+
+    if (tipo === 'saida' && quantidade > produtos[produtoIndex].quantidade) {
+        alert('Quantidade insuficiente no estoque!');
+        return false;
+    }
+
+    // Atualiza quantidade no estoque
+    if (tipo === 'entrada') {
+        produtos[produtoIndex].quantidade += quantidade;
+    } else {
+        produtos[produtoIndex].quantidade -= quantidade;
+    }
+
+    // Verifica alerta de estoque mínimo
+    if (produtos[produtoIndex].quantidade <= produtos[produtoIndex].estoqueMinimo) {
+        alert(`ALERTA: Produto "${produtos[produtoIndex].nome}" atingiu o estoque mínimo!`);
+    }
+
+    // Adiciona movimentação ao histórico
+    movimentacoes.push({
+        produto: produtos[produtoIndex].nome,
+        tipo: tipo,
+        quantidade: quantidade,
+        dataHora: dataHora,
+        usuario: usuario
+    });
+
+    atualizarTabelaHistorico();
+    atualizarProdutosSelect();
+
+    return false;
+}
+
+function atualizarTabelaHistorico() {
+    const tbody = document.querySelector('#tabelaHistorico tbody');
+    tbody.innerHTML = '';
+    movimentacoes.forEach(m => {
+        const row = `<tr>
+            <td>${m.produto}</td>
+            <td>${m.tipo}</td>
+            <td>${m.quantidade}</td>
+            <td>${m.dataHora}</td>
+            <td>${m.usuario}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+}
+
+    // Atualiza tabela e select caso usuário volte para página de cadastro de produtos
+    window.onload = () => {
+    if (produtos.length === 0) {
+        alert('Nenhum produto cadastrado! Cadastre produtos primeiro.');
+        window.location.href = '/produto';
+    }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Produto</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <div class="logo">Café Aroma & Sabor</div>
+            <div class="nav-links">
+                <a th:href="@{/}">Início</a>
+                <a th:href="@{/produto}">Produtos</a>
+                <a th:href="@{/estoque}">Estoque</a>
+                <a th:href="@{/usuario}">Usuários</a>
+            </div>
+            <div class="nav-user">
+                <span th:if="${#authorization.expression('isAuthenticated()')}" th:text="${#authentication.name}">Usuário</span>
+                <form th:if="${#authorization.expression('isAuthenticated()')}" th:action="@{/logout}" method="post" style="display:inline;margin-left:12px;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" class="btn btn-link">Sair</button>
+                </form>
+                <a th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/login}" class="btn btn-primary">Entrar</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container cadastro-container">
+        <header>
+            <h2>Cadastro de Produto</h2>
+            <div class="top-actions">
+                <a class="btn btn-secondary" th:href="@{/home}">Voltar</a>
+            </div>
+        </header>
+
+        <section class="form-section">
+            <form id="produtoForm" onsubmit="return adicionarProduto()">
+                <label>Nome:</label>
+                <input type="text" id="nome" required>
+
+                <label>Descrição:</label>
+                <input type="text" id="descricao">
+
+                <label>Estoque Mínimo:</label>
+                <input type="number" id="estoqueMinimo" required>
+
+                <label>Lote:</label>
+                <input type="text" id="lote">
+
+                <label>Data de Validade:</label>
+                <input type="date" id="validade">
+
+                <button type="submit">Adicionar Produto</button>
+            </form>
+        </section>
+
+        <section class="list-section">
+            <input type="text" id="buscarProduto" placeholder="Buscar por nome..." onkeyup="buscarProduto()">
+            <table id="tabelaProdutos">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Estoque Mínimo</th>
+                        <th>Lote</th>
+                        <th>Validade</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Produtos adicionados serão inseridos aqui -->
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        let produtos = [];
+
+        function adicionarProduto() {
+            const produto = {
+                nome: document.getElementById('nome').value,
+                descricao: document.getElementById('descricao').value,
+                estoqueMinimo: document.getElementById('estoqueMinimo').value,
+                lote: document.getElementById('lote').value,
+                validade: document.getElementById('validade').value
+            };
+            produtos.push(produto);
+            atualizarTabela();
+            document.getElementById('produtoForm').reset();
+            return false;
+        }
+
+        function atualizarTabela() {
+            const tbody = document.getElementById('tabelaProdutos').querySelector('tbody');
+            tbody.innerHTML = '';
+            produtos.forEach((p, index) => {
+                const row = `<tr>
+                    <td>${p.nome}</td>
+                    <td>${p.descricao}</td>
+                    <td>${p.estoqueMinimo}</td>
+                    <td>${p.lote}</td>
+                    <td>${p.validade}</td>
+                    <td>
+                        <button onclick="editarProduto(${index})">Editar</button>
+                        <button onclick="excluirProduto(${index})">Excluir</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function buscarProduto() {
+            const termo = document.getElementById('buscarProduto').value.toLowerCase();
+            const rows = document.querySelectorAll('#tabelaProdutos tbody tr');
+            rows.forEach(row => {
+                const nome = row.cells[0].textContent.toLowerCase();
+                row.style.display = nome.includes(termo) ? '' : 'none';
+            });
+        }
+
+        function excluirProduto(index) {
+            produtos.splice(index, 1);
+            atualizarTabela();
+        }
+
+        function editarProduto(index) {
+            const p = produtos[index];
+            document.getElementById('nome').value = p.nome;
+            document.getElementById('descricao').value = p.descricao;
+            document.getElementById('estoqueMinimo').value = p.estoqueMinimo;
+            document.getElementById('lote').value = p.lote;
+            document.getElementById('validade').value = p.validade;
+            excluirProduto(index);
+        }
+    </script>
+</body>
+</html>

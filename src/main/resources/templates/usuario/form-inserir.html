@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Usuário - Café Aroma & Sabor</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .form-section h3 {
+            grid-column: 1 / -1;
+            color: #2C1810;
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 18px;
+            border-bottom: 2px solid #E0D7D0;
+            padding-bottom: 12px;
+        }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .form-actions button,
+        .form-actions a {
+            padding: 14px 28px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-actions button {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, #704834 100%);
+            color: #fff;
+        }
+
+        .form-actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(92, 64, 51, 0.3);
+        }
+
+        .form-actions a {
+            background: #fff;
+            color: var(--primary-brown);
+            border: 2px solid var(--border-color);
+            text-decoration: none;
+        }
+
+        .form-actions a:hover {
+            background: var(--bg-light);
+            border-color: var(--accent-gold);
+        }
+
+        form {
+            display: contents;
+        }
+
+        .form-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .form-group-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-light);
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .form-group-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .form-group-checkbox label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-inner">
+        <div class="logo">☕ Café Aroma & Sabor</div>
+        <div class="nav-links">
+            <a th:href="@{/}">Início</a>
+            <a th:href="@{/produto}">Produtos</a>
+            <a th:href="@{/estoque}">Estoque</a>
+            <a th:href="@{/usuario}">Usuários</a>
+        </div>
+        <div class="nav-user">
+            <span th:if="${#authorization.expression('isAuthenticated()')}" th:text="${#authentication.name}">Usuário</span>
+            <form th:if="${#authorization.expression('isAuthenticated()')}" th:action="@{/logout}" method="post" style="display:inline;margin-left:12px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn btn-link">Sair</button>
+            </form>
+            <a th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/login}" class="btn btn-primary">Entrar</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <header>
+        <div>
+            <h2>Novo Usuário</h2>
+            <p style="color: #666; font-size: 14px; margin-top: 4px;">Crie um novo usuário no sistema</p>
+        </div>
+        <div class="top-actions">
+            <a th:href="@{/usuario}" class="btn btn-secondary">← Voltar</a>
+        </div>
+    </header>
+
+    <section class="form-section">
+        <form th:action="@{/usuario}" th:object="${usuario}" method="post" class="form-container">
+            <h3>Informações de Acesso</h3>
+
+            <div style="grid-column: span 2;">
+                <label>Nome Completo *</label>
+                <input type="text" th:field="*{nome}" placeholder="Ex: João Silva" required />
+            </div>
+
+            <div style="grid-column: span 2;">
+                <label>Email *</label>
+                <input type="email" th:field="*{email}" placeholder="Ex: joao@email.com" required />
+            </div>
+
+            <div style="grid-column: span 2;">
+                <label>Senha *</label>
+                <input type="password" th:field="*{senha}" placeholder="••••••••" required />
+            </div>
+
+            <h3>Configurações</h3>
+
+            <div>
+                <label>Perfil</label>
+                <select th:field="*{role}">
+                    <option value="USER">👤 Usuário Padrão</option>
+                    <option value="ADMIN">👨‍💼 Administrador</option>
+                </select>
+            </div>
+
+            <div class="form-group-checkbox">
+                <input type="checkbox" th:field="*{ativo}" id="ativoCheck" />
+                <label for="ativoCheck">Usuário Ativo</label>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">✓ Criar Usuário</button>
+                <a th:href="@{/usuario}">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</div>
+</body>
+</html>
+
